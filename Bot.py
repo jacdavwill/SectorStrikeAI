@@ -3,9 +3,8 @@ import numpy
 import os
 import time
 import pyautogui
-from matplotlib import pyplot
 import multiprocessing as mp
-import StockImage
+from StockImage import GameObject
 
 
 def get_greyscale_screenshot():
@@ -28,12 +27,27 @@ stockImageNames = ["fire_shot",
                "powerup_2",
                "powerup_3"]
 
-stockImages = []
-imgDirPath = os.getcwd() + "\\StockImages\\"
-imgExpPath = os.getcwd() + "\\PostImages\\"
+stockImageNames = ["striker_1",
+               "striker_2"]
+
+gameObjects = []
+projPath = os.getcwd()
+imgDirPath = projPath + "\\StockImages\\"
+imgExpPath = projPath + "\\PostImages\\"
+log = open(projPath + "\\log.txt")
 
 for name in stockImageNames:
-    stockImages.append(StockImage(name, 0.80))
+    threshold = 0.90
+
+    if name == "ship_1":
+        threshold = .95
+    elif name == "fire_shot":
+        threshold = .91
+    elif name == "striker_1" or "striker_2":
+        threshold = .97
+
+    gameObjects.append(GameObject(name, threshold, imgDirPath))
+
 
 print("Number of processors: ", mp.cpu_count())
 
@@ -43,22 +57,24 @@ x = 1
 while int(time.time()) < startTime + 5:
     screenshotColor = get_color_screenshot()
 
-    for stockImage in stockImages:
-        patch = cv2.imread(stockImage.imagePath)
-        mask = cv2.imread(stockImage.imageMaskPath)
+    for object in gameObjects:
+        patch = cv2.imread(object.imagePath)
+        mask = cv2.imread(object.imageMaskPath)
         c, w, h = patch.shape[::-1]
 
-        res = cv2.matchTemplate(screenshotColor, patch, cv2.TM_CCORR_NORMED, None, stockImage.imageMaskName)
-        threshold = 0.9
-        loc = numpy.where(res >= threshold)
+        res = cv2.matchTemplate(screenshotColor, patch, cv2.TM_CCORR_NORMED, None, mask)
+        loc = numpy.where(res >= object.threshold)
         for pt in zip(*loc[::-1]):
             cv2.rectangle(screenshotColor, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
-            print("location identified -> (" + str(pt[0]) + "," + str(pt[1]) + ")")
+            print(object.objName + " identified")
+            log.write(object.objName + " identified\n")
             r = 3
 
         cv2.imwrite(imgExpPath + "screenshot_" + str(x) + ".png", screenshotColor)
-        print("screenshot captured " + str(x))
-        x += 1
+
+    print("screenshot captured " + str(x))
+    log.write("screenshot captured " + str(x) + "\n\n")
+    x += 1
 
 print("\n\nProgram terminated")
 

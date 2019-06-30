@@ -1,11 +1,8 @@
-class StockImage():
+class GameObject:
 
-    def __init__(self, imageName, threshold, imgDirPath):
-        self.imageName = imageName + ".png"
+    def __init__(self, objName, threshold, imgDirPath):
+        self.objName = objName + ".png"
         self.threshold = threshold
-        self.imageMaskName = imageName + "_mask.png"
-        self.imagePath = imgDirPath + self.imageName
-        self.imageMaskPath = imgDirPath + self.imageMaskName
+        self.imagePath = imgDirPath + self.objName
+        self.imageMaskPath = imgDirPath + objName + "_mask.png"
 
-    def setThreshold(self, threshold):
-        self.threshold = threshold
